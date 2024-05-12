@@ -6,6 +6,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import re
 
 # Set up Chrome webdriver
 driver = webdriver.Chrome()
@@ -88,7 +89,21 @@ for link in song_links:
 
 df = pd.DataFrame({'title': song_titles, 'lyrics': all_lyrics})
 
+# data cleasing
 df['lyrics'] = df['lyrics'].str.replace("\n", " ")
+
+# Lyrics contains informative tags [chorus], [verse 1], etc. which are not part of actual text
+# Lets remove them
+def remove_square_brackets(text):
+    return re.sub(r'\[.*?\]', '', text)
+
+df['lyrics'] = df['lyrics'].apply(remove_square_brackets)
+
+# Lets count words in each song
+def count_words(text):
+    return len(text.split())
+
+df['word_count'] = df['lyrics'].apply(count_words)
 
 df.to_excel("engelbert_songs.xlsx", index=False) # mode='w'
 
